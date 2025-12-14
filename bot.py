@@ -18,12 +18,20 @@
 змінюється — додано лише докстрінги.
 """
 
+import os
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, CallbackQueryHandler, CommandHandler
+from dotenv import load_dotenv
 
 from gpt import *
 from util import *
 
-# тут будемо писати наш код :)
+# Завантажуємо змінні середовища з .env та читаємо токен бота
+load_dotenv()
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+if not TELEGRAM_BOT_TOKEN:
+    raise RuntimeError(
+        "Не знайдено TELEGRAM_BOT_TOKEN у змінних середовища або файлі .env"
+    )
 
 async def start(update, context):
   """Обробник команди /start: показує головне меню та вимикає режим ChatGPT.
@@ -377,7 +385,7 @@ dialog.counter = 0
 
 chatgpt = ChatGptService(token = "javcgkmmT5+ss2PGB5P+5fVNiZS1Y37csPkiyneYEQqWgFZwiUCeCBH1bE5yi4f+9LpUxs9/KCp4PU/t17wLL6HyHca5lQCATBbNq2c2UQl36EgxotUYme4TY2cnEx3RJKz7nRE4Grj3BbRc+EhDC8XswylqW+4gVHxZgocpzyvfRMk35So5p2DBP12VlJ8gvCQlYiEGTGWta6aQCnlKH34/yug2q7yoXf0HJWQ4p3Rf3C068=")
 
-app = ApplicationBuilder().token("***REMOVED***").build()
+app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("gpt", gpt))
 app.add_handler(CommandHandler("date", date))
