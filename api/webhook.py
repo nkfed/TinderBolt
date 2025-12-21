@@ -2,7 +2,6 @@ print(">>> api/webhook.py LOADED")
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from bot import process_update
 
 app = FastAPI()
 
@@ -10,6 +9,10 @@ app = FastAPI()
 async def telegram_webhook(request: Request):
     try:
         update_json = await request.json()
+
+        # Динамічний імпорт — тільки при запиті
+        from bot import process_update
+
         await process_update(update_json)
         return JSONResponse({"ok": True})
     except Exception as e:
