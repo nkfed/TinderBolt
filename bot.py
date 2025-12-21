@@ -94,7 +94,7 @@ async def gpt_dialog(update, context):
     Side Effects:
         - Відповідає у чаті текстом, згенерованим ШІ.
     """
-    text = update.message.text
+    text = normalize_text(update.message.text)
     prompt = load_prompt("gpt")
     answer = await chatgpt.send_question(prompt, text)
     await send_text(update, context, answer)
@@ -156,7 +156,7 @@ async def date_dialog(update, context):
         update: Об’єкт `telegram.Update` з текстом повідомлення.
         context: Об’єкт контексту `ContextTypes.DEFAULT_TYPE`.
     """
-    text = update.message.text
+    text = normalize_text(update.message.text)
     my_message = await send_text(update, context, "набирає повідомлення")
     answer = await chatgpt.add_message(text)
     await my_message.edit_text(answer)
@@ -193,7 +193,7 @@ async def message_dialog(update, context):
     Side Effects:
         - Додає текст повідомлення до списку `dialog.list`.
     """
-    text = update.message.text
+    text = normalize_text(update.message.text)
     dialog.list.append(text)
 
 async def message_button(update, context):
@@ -260,7 +260,7 @@ async def profile_dialog(update, context):
         - Надсилає проміжні підказки.
         - Редагує службове повідомлення з готовим профілем.
     """
-    text = update.message.text
+    text = normalize_text(update.message.text)
     dialog.counter += 1
 
     if dialog.counter == 1:
@@ -317,7 +317,7 @@ async def opener_dialog(update, context):
         update: Об’єкт `telegram.Update` з текстом.
         context: Об’єкт контексту `ContextTypes.DEFAULT_TYPE`.
     """
-    text = update.message.text
+    text = normalize_text(update.message.text)
     dialog.counter += 1
 
     if dialog.counter == 1:
@@ -405,6 +405,18 @@ application.add_handler(CallbackQueryHandler(message_button, pattern="^message_.
 
 async def process_update(update_json: dict):
     """Обробка webhook‑апдейту."""
+    # Нормалізація вхідного JSON (текстових значень)
+    def normalize_dict(d):
+        if isinstance(d, dict):
+            return {k: normalize_dict(v) for k, v in d.items()}
+        elif isinstance(d, list):
+            return [normalize_dict(v) for v in d]
+        elif isinstance(d, str):
+            return normalize_text(d)
+        else:
+            return d
+
+    update_json = normalize_dict(update_json)
     update = telegram.Update.de_json(update_json, application.bot)
 
     # Ініціалізуємо application один раз

@@ -18,6 +18,7 @@
 
 import openai
 from openai import OpenAI
+from util import normalize_text
 
 
 class ChatGptService:
@@ -66,6 +67,7 @@ class ChatGptService:
             temperature=0.9
         )
         message = completion.choices[0].message
+        message.content = normalize_text(message.content)
         self.message_list.append(message)
         return message.content
 
@@ -75,6 +77,7 @@ class ChatGptService:
         Args:
             prompt_text (str): Текст системного повідомлення (`role="system"`).
         """
+        prompt_text = normalize_text(prompt_text)
         self.message_list.clear()
         self.message_list.append({"role": "system", "content": prompt_text})
 
@@ -87,6 +90,7 @@ class ChatGptService:
         Returns:
             str: Текст відповіді асистента після звернення до API.
         """
+        message_text = normalize_text(message_text)
         self.message_list.append({"role": "user", "content": message_text})
         return await self.send_message_list()
 
@@ -103,6 +107,8 @@ class ChatGptService:
         Returns:
             str: Текст відповіді асистента.
         """
+        prompt_text = normalize_text(prompt_text)
+        message_text = normalize_text(message_text)
         self.message_list.clear()
         self.message_list.append({"role": "system", "content": prompt_text})
         self.message_list.append({"role": "user", "content": message_text})

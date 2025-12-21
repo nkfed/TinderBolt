@@ -8,7 +8,7 @@
 лише документацію.
 """
 
-import chardet
+import unicodedata
 from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -45,8 +45,29 @@ def dialog_user_info_to_str(user) -> str:
            "handsome": "Краса, привабливість у балах (максимум 10 балів)", "wealth": "Доход, багатство", "annoys": "У людях дратує"}
     for key, name in map.items():
         if key in user:
-            result += name + ": " + user[key] + "\n"
+            result += name + ": " + str(user[key]) + "\n"
     return result
+
+
+def normalize_text(value):
+    if value is None:
+        return ""
+
+    # Якщо це байти — декодуємо максимально безпечно
+    if isinstance(value, bytes):
+        value = value.decode("utf-8", errors="replace")
+
+    # Якщо це не рядок — приводимо до рядка
+    if not isinstance(value, str):
+        value = str(value)
+
+    # Нормалізація Unicode
+    value = unicodedata.normalize("NFKC", value)
+
+    # Повторна заміна проблемних байтів
+    value = value.encode("utf-8", errors="replace").decode("utf-8", errors="replace")
+
+    return value
 
 
 async def send_text(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str) -> Message:
@@ -67,13 +88,15 @@ async def send_text(update: Update, context: ContextTypes.DEFAULT_TYPE, text: st
     Returns:
         telegram.Message: Відправлене повідомлення або службова відповідь.
     """
+    text = normalize_text(text)
     if text.count('_') % 2 != 0:
         message = f"Рядок '{text}' є невалідним з погляду markdown. Скористайтеся методом send_html()"
         print(message)
         return await update.message.reply_text(message)
-    
+
     text = text.encode('utf16', errors='surrogatepass').decode('utf-8', errors="replace")
     return await context.bot.send_message(chat_id=update.effective_chat.id, text=text, parse_mode=ParseMode.MARKDOWN)
+
 
 async def send_html(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str) -> Message:
     """Надсилає в чат HTML‑повідомлення.
@@ -89,6 +112,7 @@ async def send_html(update: Update, context: ContextTypes.DEFAULT_TYPE, text: st
     Returns:
         telegram.Message: Відправлене повідомлення.
     """
+    text = normalize_text(text)
     text = text.encode('utf16', errors='surrogatepass').decode('utf-8', errors="replace")
     return await context.bot.send_message(chat_id=update.effective_chat.id, text=text, parse_mode=ParseMode.HTML)
 
@@ -105,6 +129,7 @@ async def send_text_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     Returns:
         telegram.Message: Відповідь бота з інлайн‑кнопками.
     """
+    text = normalize_text(text)
     text = text.encode('utf16', errors='surrogatepass').decode('utf-8', errors="replace")
     keyboard = []
     for key, value in buttons.items():
@@ -128,7 +153,8 @@ async def send_photo(update: Update, context: ContextTypes.DEFAULT_TYPE, name: s
     Raises:
         FileNotFoundError: Якщо файл зображення відсутній.
     """
-    with open('resources/images/' + name + ".jpg", 'rb') as photo:
+    path = 'resources/images/' + name + ".jpg"
+    with open(path, 'rb') as photo:
         return await context.bot.send_photo(chat_id=update.effective_chat.id, photo=photo)
 
 
@@ -143,7 +169,7 @@ async def show_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, com
         context (ContextTypes.DEFAULT_TYPE): Контекст бота.
         commands (dict): Відображення `команда -> опис` для меню.
     """
-    command_list = [BotCommand(key, value) for key, value in commands.items()]
+    command_list = [BotCommand(key, normalize_text(value)) for key, value in commands.items()]
     await context.bot.set_my_commands(command_list, scope=BotCommandScopeChat(chat_id=update.effective_chat.id))
     await context.bot.set_chat_menu_button(menu_button=MenuButtonCommands(), chat_id=update.effective_chat.id)
 
@@ -168,10 +194,9 @@ def load_message(name):
         str: Вміст файлу.
     """
     path = f"resources/messages/{name}.txt"
-    with open(path, "rb") as f:
-        raw = f.read()
-    encoding = chardet.detect(raw)["encoding"] or "utf-8"
-    return raw.decode(encoding, errors="replace")
+    with open(path, "r", encoding="utf-8", errors="replace") as f:
+        text = f.read()
+    return normalize_text(text)
 
 
 def load_prompt(name):
@@ -184,10 +209,9 @@ def load_prompt(name):
         str: Вміст файлу.
     """
     path = f"resources/prompts/{name}.txt"
-    with open(path, "rb") as f:
-        raw = f.read()
-    encoding = chardet.detect(raw)["encoding"] or "utf-8"
-    return raw.decode(encoding, errors="replace")
+    with open(path, "r", encoding="utf-8", errors="replace") as f:
+        text = f.read()
+    return normalize_text(text)
 
 
 class Dialog:
