@@ -8,7 +8,14 @@ app = FastAPI()
 @app.post("/api/webhook")
 async def telegram_webhook(request: Request):
     try:
-        update_json = await request.json()
+        raw = await request.body()
+        try:
+            text = raw.decode("utf-8")
+        except:
+            text = raw.decode("latin-1", errors="replace")
+
+        import json
+        update_json = json.loads(text)
 
         # Динамічний імпорт — тільки при запиті
         from bot import process_update
