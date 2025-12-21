@@ -1,9 +1,17 @@
 print(">>> api/webhook.py LOADED")
 
+import time
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 app = FastAPI()
+
+@app.get("/api/health")
+async def health():
+    return {
+        "status": "ok",
+        "timestamp": int(time.time())
+    }
 
 @app.post("/api/webhook")
 async def telegram_webhook(request: Request):

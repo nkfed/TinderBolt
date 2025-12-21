@@ -1,9 +1,17 @@
+import time
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import uvicorn
 from bot import process_update
 
 app = FastAPI()
+
+@app.get("/api/health")
+async def health():
+    return {
+        "status": "ok",
+        "timestamp": int(time.time())
+    }
 
 @app.get("/")
 async def root():
