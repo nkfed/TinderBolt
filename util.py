@@ -77,8 +77,8 @@ async def send_text(update: Update, context: ContextTypes.DEFAULT_TYPE, text: st
     користувачу повертається службове повідомлення з рекомендацією скористатися
     `send_html()`.
 
-    Перед відправкою текст перекодується через UTF‑16 з `surrogatepass`, щоб
-    коректно передати сурогатні пари (емодзі тощо).
+    Перед відправкою текст проходить безпечну нормалізацію UTF-8 з `errors="replace"`, 
+    щоб уникнути помилок при наявності проблемних байтів.
 
     Args:
         update (telegram.Update): Апдейт з контекстом чату/повідомлення.
@@ -94,15 +94,17 @@ async def send_text(update: Update, context: ContextTypes.DEFAULT_TYPE, text: st
         print(message)
         return await update.message.reply_text(message)
 
-    text = text.encode('utf16', errors='surrogatepass').decode('utf-8', errors="replace")
+    # Повторна заміна проблемних байтів
+    text = str(text)
+    text = text.encode("utf-8", errors="replace").decode("utf-8", errors="replace")
     return await context.bot.send_message(chat_id=update.effective_chat.id, text=text, parse_mode=ParseMode.MARKDOWN)
 
 
 async def send_html(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str) -> Message:
     """Надсилає в чат HTML‑повідомлення.
 
-    Текст попередньо перекодовуємо через UTF‑16 із `surrogatepass` для
-    коректної підтримки емодзі та сурогатних пар.
+    Текст попередньо проходить безпечну нормалізацію UTF-8 з `errors="replace"` 
+    для стабільної роботи з будь-якими символами.
 
     Args:
         update (telegram.Update): Апдейт з контекстом чату/повідомлення.
@@ -113,7 +115,9 @@ async def send_html(update: Update, context: ContextTypes.DEFAULT_TYPE, text: st
         telegram.Message: Відправлене повідомлення.
     """
     text = normalize_text(text)
-    text = text.encode('utf16', errors='surrogatepass').decode('utf-8', errors="replace")
+    # Повторна заміна проблемних байтів
+    text = str(text)
+    text = text.encode("utf-8", errors="replace").decode("utf-8", errors="replace")
     return await context.bot.send_message(chat_id=update.effective_chat.id, text=text, parse_mode=ParseMode.HTML)
 
 
@@ -130,7 +134,9 @@ async def send_text_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE, 
         telegram.Message: Відповідь бота з інлайн‑кнопками.
     """
     text = normalize_text(text)
-    text = text.encode('utf16', errors='surrogatepass').decode('utf-8', errors="replace")
+    # Повторна заміна проблемних байтів
+    text = str(text)
+    text = text.encode("utf-8", errors="replace").decode("utf-8", errors="replace")
     keyboard = []
     for key, value in buttons.items():
         button = InlineKeyboardButton(str(value), callback_data=str(key))
