@@ -8,6 +8,7 @@
 лише документацію.
 """
 
+import chardet
 from telegram import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -166,8 +167,11 @@ def load_message(name):
     Returns:
         str: Вміст файлу.
     """
-    with open("resources/messages/" + name + ".txt", "r", encoding="utf-8", errors="replace") as file:
-        return file.read()
+    path = f"resources/messages/{name}.txt"
+    with open(path, "rb") as f:
+        raw = f.read()
+    encoding = chardet.detect(raw)["encoding"] or "utf-8"
+    return raw.decode(encoding, errors="replace")
 
 
 def load_prompt(name):
@@ -179,8 +183,11 @@ def load_prompt(name):
     Returns:
         str: Вміст файлу.
     """
-    with open("resources/prompts/" + name + ".txt", "r", encoding="utf-8", errors="replace") as file:
-        return file.read()
+    path = f"resources/prompts/{name}.txt"
+    with open(path, "rb") as f:
+        raw = f.read()
+    encoding = chardet.detect(raw)["encoding"] or "utf-8"
+    return raw.decode(encoding, errors="replace")
 
 
 class Dialog:
