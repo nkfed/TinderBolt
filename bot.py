@@ -19,6 +19,8 @@
 """
 
 import os
+import telegram
+from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, CallbackQueryHandler, CommandHandler
 from dotenv import load_dotenv
 
@@ -32,6 +34,10 @@ if not TELEGRAM_BOT_TOKEN:
     raise RuntimeError(
         "Не знайдено TELEGRAM_BOT_TOKEN у змінних середовища або файлі .env"
     )
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
+if not OPENAI_API_KEY:
+    raise RuntimeError("Не знайдено OPENAI_API_KEY у змінних середовища або файлі .env")
 
 async def start(update, context):
   """Обробник команди /start: показує головне меню та вимикає режим ChatGPT.
@@ -383,19 +389,34 @@ dialog.list = []
 dialog.user = {}
 dialog.counter = 0
 
-chatgpt = ChatGptService(token = "javcgkmmT5+ss2PGB5P+5fVNiZS1Y37csPkiyneYEQqWgFZwiUCeCBH1bE5yi4f+9LpUxs9/KCp4PU/t17wLL6HyHca5lQCATBbNq2c2UQl36EgxotUYme4TY2cnEx3RJKz7nRE4Grj3BbRc+EhDC8XswylqW+4gVHxZgocpzyvfRMk35So5p2DBP12VlJ8gvCQlYiEGTGWta6aQCnlKH34/yug2q7yoXf0HJWQ4p3Rf3C068=")
+chatgpt = ChatGptService(token=OPENAI_API_KEY)
 
-app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("gpt", gpt))
-app.add_handler(CommandHandler("date", date))
-app.add_handler(CommandHandler("message", message))
-app.add_handler(CommandHandler("profile", profile))
-app.add_handler(CommandHandler("opener", opener))
+def create_application():
+    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("gpt", gpt))
+    app.add_handler(CommandHandler("date", date))
+    app.add_handler(CommandHandler("message", message))
+    app.add_handler(CommandHandler("profile", profile))
+    app.add_handler(CommandHandler("opener", opener))
 
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, hello ))
-app.add_handler(CallbackQueryHandler(date_button, pattern="^date_.*"))
-app.add_handler(CallbackQueryHandler(message_button, pattern="^message_.*"))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, hello))
+    app.add_handler(CallbackQueryHandler(date_button, pattern="^date_.*"))
+    app.add_handler(CallbackQueryHandler(message_button, pattern="^message_.*"))
+    return app
 
-app.run_polling()
+def run_polling():
+    app = create_application()
+    app.run_polling()
+
+async def process_update(update_json: dict):
+    """
+    Приймає JSON від Telegram webhook і передає його в Application.
+    """
+    app = create_application()
+    update = telegram.Update.de_json(update_json, app.bot)
+    await app.process_update(update)
+
+if __name__ == "__main__":
+    run_polling()
 
