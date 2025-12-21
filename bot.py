@@ -417,22 +417,3 @@ async def process_update(update_json: dict):
 
     await application.process_update(update)
 
-if __name__ == "__main__":
-    import uvicorn
-    from fastapi import FastAPI, Request
-    from fastapi.responses import JSONResponse
-
-    app = FastAPI()
-
-    @app.post("/api/webhook")
-    async def telegram_webhook(request: Request):
-        try:
-            update_json = await request.json()
-            await process_update(update_json)
-            return JSONResponse({"ok": True})
-        except Exception as e:
-            print("Webhook error:", e)
-            return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
