@@ -391,32 +391,48 @@ dialog.counter = 0
 
 chatgpt = ChatGptService(token=OPENAI_API_KEY)
 
-def create_application():
-    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("gpt", gpt))
-    app.add_handler(CommandHandler("date", date))
-    app.add_handler(CommandHandler("message", message))
-    app.add_handler(CommandHandler("profile", profile))
-    app.add_handler(CommandHandler("opener", opener))
+# Глобальний application, створюється один раз
+application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, hello))
-    app.add_handler(CallbackQueryHandler(date_button, pattern="^date_.*"))
-    app.add_handler(CallbackQueryHandler(message_button, pattern="^message_.*"))
-    return app
+# Реєстрація хендлерів
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("gpt", gpt))
+application.add_handler(CommandHandler("date", date))
+application.add_handler(CommandHandler("message", message))
+application.add_handler(CommandHandler("profile", profile))
+application.add_handler(CommandHandler("opener", opener))
 
-def run_polling():
-    app = create_application()
-    app.run_polling()
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, hello))
+application.add_handler(CallbackQueryHandler(date_button, pattern="^date_.*"))
+application.add_handler(CallbackQueryHandler(message_button, pattern="^message_.*"))
 
 async def process_update(update_json: dict):
-    """
-    Приймає JSON від Telegram webhook і передає його в Application.
-    """
-    app = create_application()
-    update = telegram.Update.de_json(update_json, app.bot)
-    await app.process_update(update)
+    """Обробка webhook‑апдейту."""
+    update = telegram.Update.de_json(update_json, application.bot)
+
+    # Ініціалізуємо application один раз
+    if not application.running:
+        await application.initialize()
+        await application.start()
+
+    await application.process_update(update)
 
 if __name__ == "__main__":
-    run_polling()
+    import uvicorn
+    from fastapi import FastAPI, Request
+    from fastapi.responses import JSONResponse
+
+    app = FastAPI()
+
+    @app.post("/api/webhook")
+    async def telegram_webhook(request: Request):
+        try:
+            update_json = await request.json()
+            await process_update(update_json)
+            return JSONResponse({"ok": True})
+        except Exception as e:
+            print("Webhook error:", e)
+            return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
