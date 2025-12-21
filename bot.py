@@ -17,7 +17,7 @@
 `chatgpt` (сервіс взаємодії з OpenAI), визначені наприкінці файлу. Логіка коду не
 змінюється — додано лише докстрінги.
 """
-print(">>> bot.py LOADED")
+
 import os
 import telegram
 from telegram import Update
