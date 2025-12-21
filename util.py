@@ -71,7 +71,7 @@ async def send_text(update: Update, context: ContextTypes.DEFAULT_TYPE, text: st
         print(message)
         return await update.message.reply_text(message)
     
-    text = text.encode('utf16', errors='surrogatepass').decode('utf16')
+    text = text.encode('utf16', errors='surrogatepass').decode('utf-8', errors="replace")
     return await context.bot.send_message(chat_id=update.effective_chat.id, text=text, parse_mode=ParseMode.MARKDOWN)
 
 async def send_html(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str) -> Message:
@@ -88,7 +88,7 @@ async def send_html(update: Update, context: ContextTypes.DEFAULT_TYPE, text: st
     Returns:
         telegram.Message: Відправлене повідомлення.
     """
-    text = text.encode('utf16', errors='surrogatepass').decode('utf16')
+    text = text.encode('utf16', errors='surrogatepass').decode('utf-8', errors="replace")
     return await context.bot.send_message(chat_id=update.effective_chat.id, text=text, parse_mode=ParseMode.HTML)
 
 
@@ -104,7 +104,7 @@ async def send_text_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     Returns:
         telegram.Message: Відповідь бота з інлайн‑кнопками.
     """
-    text = text.encode('utf16', errors='surrogatepass').decode('utf16')
+    text = text.encode('utf16', errors='surrogatepass').decode('utf-8', errors="replace")
     keyboard = []
     for key, value in buttons.items():
         button = InlineKeyboardButton(str(value), callback_data=str(key))
@@ -166,7 +166,7 @@ def load_message(name):
     Returns:
         str: Вміст файлу.
     """
-    with open("resources/messages/" + name + ".txt", "r", encoding="utf8") as file:
+    with open("resources/messages/" + name + ".txt", "r", encoding="utf-8") as file:
         return file.read()
 
 
@@ -179,7 +179,7 @@ def load_prompt(name):
     Returns:
         str: Вміст файлу.
     """
-    with open("resources/prompts/" + name + ".txt", "r", encoding="utf8") as file:
+    with open("resources/prompts/" + name + ".txt", "r", encoding="utf-8") as file:
         return file.read()
 
 
