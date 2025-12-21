@@ -1,3 +1,5 @@
+print(">>> api/webhook.py LOADED")
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from bot import process_update
