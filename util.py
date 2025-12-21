@@ -166,7 +166,7 @@ def load_message(name):
     Returns:
         str: Вміст файлу.
     """
-    with open("resources/messages/" + name + ".txt", "r", encoding="utf-8") as file:
+    with open("resources/messages/" + name + ".txt", "r", encoding="utf-8", errors="replace") as file:
         return file.read()
 
 
@@ -179,7 +179,7 @@ def load_prompt(name):
     Returns:
         str: Вміст файлу.
     """
-    with open("resources/prompts/" + name + ".txt", "r", encoding="utf-8") as file:
+    with open("resources/prompts/" + name + ".txt", "r", encoding="utf-8", errors="replace") as file:
         return file.read()
 
 
