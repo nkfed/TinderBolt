@@ -27,17 +27,14 @@ from dotenv import load_dotenv
 from gpt import *
 from util import *
 
-# Завантажуємо змінні середовища з .env та читаємо токен бота
 load_dotenv()
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
-if not TELEGRAM_BOT_TOKEN:
-    raise RuntimeError(
-        "Не знайдено TELEGRAM_BOT_TOKEN у змінних середовища або файлі .env"
-    )
+if TELEGRAM_BOT_TOKEN == "":
+    print("⚠️ TELEGRAM_BOT_TOKEN is missing — running in limited mode")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
-if not OPENAI_API_KEY:
-    raise RuntimeError("Не знайдено OPENAI_API_KEY у змінних середовища або файлі .env")
+if OPENAI_API_KEY == "":
+    print("⚠️ OPENAI_API_KEY is missing — GPT features disabled")
 
 async def start(update, context):
   """Обробник команди /start: показує головне меню та вимикає режим ChatGPT.
